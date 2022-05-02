@@ -4,6 +4,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 int SD_C;
 
@@ -16,7 +18,7 @@ void *receiveAndShowMsg(){
         
 		recv(SD_C, &res, sizeof(res), 0);
 
-		fprintf(stdout, "\nSERVER => %s>", res);
+		fprintf(stdout, "\n%s> ", res);
 		fflush(stdout);
 	}
 }
@@ -56,5 +58,22 @@ void startDialogProccess(int sd, char* nick){
 	
     printf("------- encerrando conexao com o servidor -----\n");
     pthread_cancel(recv_th);
-    pthread_join(recv_th, NULL);		
+    pthread_join(recv_th, NULL);
+		
+}
+
+int connectServer(char* addr, int sd){
+
+    struct sockaddr_in room;
+	room.sin_family = AF_INET;
+    room.sin_addr.s_addr = inet_addr(addr);
+   	room.sin_port = htons(5200);
+   	memset(&(room.sin_zero), '\0', 8); 
+
+    if (connect(sd, (struct sockaddr *)&room, sizeof(room)) < 0){
+	    fprintf(stderr, "\nTentativa de conexao falhou!\n");
+	    return 1;
+    }
+
+return 0;
 }

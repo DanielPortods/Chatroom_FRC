@@ -16,50 +16,50 @@
 
 char *NICK;
 int SD;
-pthread_t myRoom;
+
+void enableSocket(){
+    SD = socket(AF_INET, SOCK_STREAM, 0);
+	if (SD < 0)
+	{
+		fprintf(stderr, "Criacao do socket falhou!\n");
+		exit(1);
+	}
+}
 
 int main(){
     wellcome();
 
     NICK = identify();
 
-    /* Cria socket */
-	SD = socket(AF_INET, SOCK_STREAM, 0);
-	if (SD < 0)
-	{
-		fprintf(stderr, "Criacao do socket falhou!\n");
-		exit(1);
-	}
-
     while (1)
     {
         int enter = home(NICK);
 
         if(enter == 1){
-            char *addr_s;
-
-            myRoom = createRoom(NICK, &addr_s);
+            char *addr_s;           
             
-            if(myRoom == 0) continue;
+            if(createRoom(NICK, &addr_s)) continue;
 
-			struct sockaddr_in room;
-			room.sin_family = AF_INET;
-    		room.sin_addr.s_addr = inet_addr(addr_s);
-   			room.sin_port = htons(5200);
-   			memset(&(room.sin_zero), '\0',8); 
+            enableSocket();
 
-            if (connect(SD, (struct sockaddr *)&room, sizeof(room)) < 0){
-		        fprintf(stderr, "Tentativa de conexao falhou!\n");
-                pthread_join(myRoom, NULL);
-		        exit(1);
-            }
+			if(connectServer(addr_s, SD)) continue;
             
-            startDialogProccess(SD, NICK);            
+            startDialogProccess(SD, NICK);
+
+            close(SD);            
         }
         else if(enter == 2){
             char *addr_room = listAndSelectRooms();
+
             if (!strcmp(addr_room, "0")) continue;
-            printf("==> %s\n", addr_room);
+
+            enableSocket();
+
+            if(connectServer(addr_room, SD)) continue;
+
+            startDialogProccess(SD, NICK);
+
+            close(SD);
         }
         else {
             printf("encerrando...\n");
@@ -67,7 +67,5 @@ int main(){
             break;
         }
     }
-
-	close(SD);
 return 0;
 }

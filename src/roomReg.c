@@ -20,6 +20,7 @@ int registerRoom(int cp, char* owner, char* name, char* ip){
              *bufferRD = malloc(sz);
 
     new->capacity = cp;
+    new->status = 1;
     strcpy(new->name, name);
     strcpy(new->nickOwner, owner);
     
@@ -81,7 +82,7 @@ char *listAndSelectRooms(){
         int sz = sizeof(roomData);
         roomData *bufferRD = malloc(sz);
 
-        fseek(arq, sel*sz, SEEK_SET);
+        fseek(arq, (sel-1)*sz, SEEK_SET);
         fread(bufferRD, sz, 1, arq);
 
         fclose(arq);
@@ -91,7 +92,7 @@ char *listAndSelectRooms(){
             sleep(1.4);
             continue;
         }
-
+        //printf("%s\n", bufferRD->ip);
         strcpy(ret, (char*) &bufferRD->ip);
         free(bufferRD);
         break;

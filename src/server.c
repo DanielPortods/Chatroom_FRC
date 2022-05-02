@@ -32,31 +32,6 @@ void send_msg(int arg, int n) {
     }
 }
 
-/*int registerRoom(){
-    //AQUI TEM PROBLEMA AO EXCLUIR
-    FILE *arq = fopen("files/rooms", "ab+");
-
-    roomData *new = malloc(sizeof(roomData)),
-             *bufferRD = malloc(sizeof(roomData));
-
-    new->capacity = CAPACITY;
-    strcpy(new->name, NAME);
-    strcpy(new->nickOwner, NICKOWNER);
-
-    int count = 1;
-    while(fread(bufferRD, sizeof(roomData), 1, arq) != 0) count++;
-    printf("%d\n", count);
-   
-    char aux[3];
-    sprintf(aux, "%d", count);
-
-    strcat(IP_ADR, aux);
-    
-    strcpy(new->ip, IP_ADR);
-    
-return fwrite(new, sizeof(roomData), 1, arq);
-}*/
-
 void *launchRoom(){
     FD_ZERO(&MASTER); 
     FD_ZERO(&READ_FDS);
@@ -113,7 +88,7 @@ void *launchRoom(){
 	}    
 }
 
-pthread_t createRoom(char* nick, char* ladoServ){
+int createRoom(char* nick, char* ladoServ){
 
     strcpy(NICKOWNER, nick);
 
@@ -123,7 +98,7 @@ pthread_t createRoom(char* nick, char* ladoServ){
         printf("Digite um nome para a sua sala (max 20 caracteres):\n [0] Cancelar\n\n>> ");
         int tam = scanf(" %[^\n]", NAME);
 
-        if(strlen(NAME) == 1 && NAME[0] == '0') return 0;
+        if(strlen(NAME) == 1 && NAME[0] == '0') return 1;
         else if(tam > 20) {
             printf("Nome muito longo! Max 20 caracteres...\n");
             sleep(2);
@@ -139,7 +114,7 @@ pthread_t createRoom(char* nick, char* ladoServ){
         
         scanf(" %d", &CAPACITY);
 
-        if(CAPACITY == 0) return 0;
+        if(CAPACITY == 0) return 1;
 
         else if(CAPACITY > 20) {
             printf("O número máximo de participantes é 20!\n");
@@ -149,13 +124,14 @@ pthread_t createRoom(char* nick, char* ladoServ){
         else break;
     }
 
-    pthread_t room;
-    pthread_create(&room, NULL, launchRoom, NULL);
-    sleep(2);
+    //pthread_t room;
+    //pthread_create(&room, NULL, launchRoom, NULL);
+    if(!fork()) launchRoom();
+    sleep(2);    
 
     char *ip_r = inet_ntoa(MYADDR.sin_addr);
     
     memcpy(ladoServ, &ip_r, sizeof(ip_r));
 
-return room;
+return 0;
 }
