@@ -1,0 +1,1 @@
+void startDialogProccess(int sd, char* nick);
