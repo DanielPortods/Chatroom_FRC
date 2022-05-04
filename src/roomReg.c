@@ -10,14 +10,44 @@ typedef struct roomData
     int capacity, status;
 } roomData;
 
+int SZ = sizeof(roomData);
+
+int insertArq(FILE *arq, int n, roomData* new){
+    roomData *bufferRD = malloc(SZ);
+    FILE *arq_temp = fopen("files/rooms_bkp", "ab+");
+    rewind(arq);
+
+    for (int i = 1; i < n; i++)
+    {
+        fread(bufferRD, SZ, 1, arq);
+        fwrite(bufferRD, SZ, 1, arq_temp);
+    }
+
+    fseek(arq, SZ*1, SEEK_CUR);
+    int ret = fwrite(new, SZ, 1, arq_temp);    
+
+    if(ret){
+        while (fread(bufferRD, SZ, 1, arq) != 0){
+            fwrite(bufferRD, SZ, 1, arq_temp);
+        }
+
+        remove("files/rooms");
+        rename("files/rooms_bkp", "files/rooms");
+
+    }else remove("files/rooms_bkp");
+
+    fclose(arq_temp);
+    free(bufferRD);
+
+return ret;
+}
+
 int registerRoom(int cp, char* owner, char* name, char* ip){
     //AQUI TEM PROBLEMA AO EXCLUIR
     FILE *arq = fopen("files/rooms", "ab+");
 
-    int sz = sizeof(roomData);
-
-    roomData *new = malloc(sz),
-             *bufferRD = malloc(sz);
+    roomData *new = malloc(SZ),
+             *bufferRD = malloc(SZ);
 
     new->capacity = cp;
     new->status = 1;
@@ -25,9 +55,9 @@ int registerRoom(int cp, char* owner, char* name, char* ip){
     strcpy(new->nickOwner, owner);
     
     int count = 1;
-    while(fread(bufferRD, sz, 1, arq) != 0){
-        count++;
+    while(fread(bufferRD, SZ, 1, arq) != 0){
         if(!bufferRD->status) break;
+        count++;
     }
 
     char aux[3];
@@ -37,31 +67,11 @@ int registerRoom(int cp, char* owner, char* name, char* ip){
 
     strcpy(new->ip, ip);
     
-    FILE *arq_temp = fopen("files/rooms_bkp", "ab+");
-    rewind(arq);
+    int ret = insertArq(arq, count, new);
 
-    for (int i = 1; i < count; i++)
-    {
-        fread(bufferRD, sz, 1, arq);
-        fwrite(bufferRD, sz, 1, arq_temp);
-    }
-
-    fseek(arq, sz*1, SEEK_CUR);
-    int ret = fwrite(new, sz, 1, arq_temp);    
-
-    if(ret){
-        while (fread(bufferRD, sz, 1, arq) != 0){
-            fwrite(bufferRD, sz, 1, arq_temp);
-        }
-        fclose(arq);
-        remove("files/rooms");
-        rename("files/rooms_bkp", "files/rooms");
-    }else remove("files/rooms_bkp");
-
-    fclose(arq_temp);
+    fclose(arq);
     free(new);
-    free(bufferRD);
-    
+
 return ret;
 }
 
@@ -79,11 +89,10 @@ char *listAndSelectRooms(){
 
         FILE *arq = fopen("files/rooms", "rb");
 
-        int sz = sizeof(roomData);
-        roomData *bufferRD = malloc(sz);
+        roomData *bufferRD = malloc(SZ);
 
-        fseek(arq, (sel-1)*sz, SEEK_SET);
-        fread(bufferRD, sz, 1, arq);
+        fseek(arq, (sel-1)*SZ, SEEK_SET);
+        fread(bufferRD, SZ, 1, arq);
 
         fclose(arq);
 
@@ -107,10 +116,10 @@ void listAllRooms(){
     int i = 0;
 
     if(arq != NULL){
-        int sz = sizeof(roomData);
-        roomData *bufferRD = malloc(sz);
 
-        while (fread(bufferRD, sz, 1, arq) != 0){
+        roomData *bufferRD = malloc(SZ);
+
+        while (fread(bufferRD, SZ, 1, arq) != 0){
             if(!bufferRD->status) continue;
             printf("\n  [%d] - %s, Vagas: %d - Dono: @%s\n", i+1, bufferRD->name, bufferRD->capacity, bufferRD->nickOwner);
             i++;
@@ -124,4 +133,26 @@ void listAllRooms(){
         printf("\n  Ops... Nenhuma sala disponível o.O\n");
     }
     else printf("\nDigite o número da sala que deseja entrar:\n\n");
+}
+
+int deactiveRoom(char *ipRoom){
+    roomData *bufferRD = malloc(SZ);
+    FILE *arq = fopen("files/rooms", "ab+");
+
+    int count = 1;
+
+    while (fread(bufferRD, SZ, 1, arq) != 0){
+        if(strcmp(bufferRD->ip, ipRoom) == 0){
+            bufferRD->status=0;
+            break;
+        }     
+        count++;   
+    }
+
+    int ret = insertArq(arq, count, bufferRD);
+
+    fclose(arq);
+    free(bufferRD);
+
+return ret;
 }

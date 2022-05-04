@@ -6,7 +6,7 @@
 char nickname[15];
 
 void wellcome(){
-    //execl("/bin/clear", "/bin/clear", NULL);
+    system("clear");
     printf("-------------- Chatroom --------------\n");
     printf("\nBem vindo ao sistema de salas de FRC!\n");
 }
@@ -22,6 +22,7 @@ int home(char* nick){
     int ret;
 
     while(1){
+        system("clear");
         printf("\n-------------------------------------\n");
         printf("   [ @%s ] online\n", nick);
         printf("\nMenu:\n\n [1] Criar uma sala\n [2] Entrar em uma sala\n [3] Sair\n\n>> ");
@@ -34,7 +35,7 @@ int home(char* nick){
         else {
             
             printf("\nOpção invalida! Selecione as disponíveis no Menu...\n");
-            sleep(1.5);
+            sleep(2.2);
         }
     }
     
@@ -42,6 +43,7 @@ int home(char* nick){
 }
 
 int listOfRooms(){
+    system("clear");
     printf("\n-------------------------------------\n");
     printf("-------- Salas disponíveis ----------\n");
     printf("   [0] Voltar\n");

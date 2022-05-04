@@ -17,12 +17,14 @@ char IP_ADR[16] = "127.0.0.", NAME[22], NICKOWNER[15], BUF[256];
 fd_set MASTER, READ_FDS, WRITE_FDS;
 struct sockaddr_in 	MYADDR, REMOTEADDR;
 
+int serverComand(){
+    char c = BUF[0];
 
-typedef struct roomData
-{
-    char ip[16], name[22], nickOwner[15];
-    int capacity;
-} roomData;
+    if(c == 'q') return 1;
+    else if(c == 'e') return 2;
+
+return 0;
+}
 
 void send_msg(int arg, int n) {
     for (int i = 0; i <= FDMAX; i++) {
@@ -32,7 +34,21 @@ void send_msg(int arg, int n) {
     }
 }
 
-void *launchRoom(){
+void closeServer(){
+    strcpy(BUF, "[SERVER]: A sala está sendo fechada, até a proxima! bye...\n");
+    send_msg(SD_S, sizeof(BUF));
+    sleep(2);
+
+    memset(BUF, 0, sizeof(BUF));
+    BUF[0] = 'e';
+    send_msg(SD_S, 1);
+    //FD_ZERO(&MASTER);
+    //close(SD_S);  
+    deactiveRoom(IP_ADR);
+    exit(0);
+}
+
+void launchRoom(){
     FD_ZERO(&MASTER); 
     FD_ZERO(&READ_FDS);
     
@@ -61,11 +77,11 @@ void *launchRoom(){
         exit(1);
     }
 
-    listen(SD_S, CAPACITY); 
+    listen(SD_S, 10); 
     FD_SET(SD_S, &MASTER);
-    FD_SET(STDIN, &MASTER);
+    //FD_SET(STDIN, &MASTER);
     FDMAX = SD_S;
-
+    
     while (1){
        READ_FDS = MASTER;
        
@@ -77,14 +93,31 @@ void *launchRoom(){
 	                int newfd = accept(SD_S, (struct sockaddr *)&REMOTEADDR, (socklen_t*)&ADDRLEN);
 	                FD_SET(newfd, &MASTER);
 	                if (newfd > FDMAX) FDMAX = newfd;
+                    //refresh rooms file with new participants number
+                    //send a wellcome msg
+                    //broadcast the new member
 	            } 
                 else {
 		        	memset (&BUF, 0 , sizeof (BUF));
 	        		int n = recv(i, BUF, sizeof(BUF), 0);
-	        		send_msg(i, n); 
+
+                    if(BUF[1]=='#'){
+                        int comand = serverComand();
+                        if (comand == 1) {
+                            FD_CLR(i, &MASTER);
+                            continue;
+                        }
+                        else if(comand == 2){
+                            closeServer();
+                        } 
+                        else {
+                            strcpy(BUF, "Comando inválido...");
+                            send(i, BUF, sizeof(BUF), 0);
+                        }
+                    } else send_msg(i, n); 
                 } 
             }
-  	    }
+  	    }  
 	}    
 }
 
@@ -94,7 +127,9 @@ int createRoom(char* nick, char* ladoServ){
 
     while (1)
     {
+        system("clear");
         printf("\n-------------------------------------\n");
+        printf("--------- Criação de sala -----------\n\n");
         printf("Digite um nome para a sua sala (max 20 caracteres):\n [0] Cancelar\n\n>> ");
         int tam = scanf(" %[^\n]", NAME);
 
@@ -109,7 +144,9 @@ int createRoom(char* nick, char* ladoServ){
 
     while (1)
     {
+        system("clear");
         printf("\n-------------------------------------\n");
+        printf("-------- Criação de sala ----------\n\n");
         printf("Digite a capacidade da sua sala (max 20 participantes):\n [0] Cancelar\n\n>> ");
         
         scanf(" %d", &CAPACITY);
@@ -124,9 +161,10 @@ int createRoom(char* nick, char* ladoServ){
         else break;
     }
 
-    //pthread_t room;
-    //pthread_create(&room, NULL, launchRoom, NULL);
-    if(!fork()) launchRoom();
+    if(!fork()){
+        if(!fork()) launchRoom();
+        exit(0);
+    } 
     sleep(2);    
 
     char *ip_r = inet_ntoa(MYADDR.sin_addr);

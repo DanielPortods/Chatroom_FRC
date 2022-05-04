@@ -27,9 +27,11 @@ void enableSocket(){
 }
 
 int main(){
+    
     wellcome();
 
     NICK = identify();
+    
 
     while (1)
     {
@@ -42,8 +44,11 @@ int main(){
 
             enableSocket();
 
-			if(connectServer(addr_s, SD)) continue;
-            
+			if(connectServer(addr_s, SD)) {
+                close(SD);
+                continue;
+            }
+
             startDialogProccess(SD, NICK);
 
             close(SD);            
@@ -55,7 +60,10 @@ int main(){
 
             enableSocket();
 
-            if(connectServer(addr_room, SD)) continue;
+            if(connectServer(addr_room, SD)){
+                close(SD);
+                continue;
+            }
 
             startDialogProccess(SD, NICK);
 
