@@ -43,7 +43,7 @@ return ret;
 }
 
 int registerRoom(int cp, char* owner, char* name, char* ip){
-    //AQUI TEM PROBLEMA AO EXCLUIR
+
     FILE *arq = fopen("files/rooms", "ab+");
 
     roomData *new = malloc(SZ),

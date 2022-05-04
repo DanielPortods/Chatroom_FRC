@@ -30,7 +30,7 @@ int main(){
     
     wellcome();
 
-    NICK = identify();    
+    NICK = identify();  
 
     while (1)
     {

@@ -13,7 +13,12 @@ void wellcome(){
 
 char* identify(){
     printf("\nDigite o seu apelido\n>> ");
+    
     scanf(" %[^\n]", nickname);
+
+    for(int i=0; i<15; i++){
+        if(nickname[i]==' ') nickname[i]='_';
+    }
 
     return nickname;
 }
@@ -56,4 +61,11 @@ int listOfRooms(){
     scanf(" %d", &ret);
 
 return ret;
+}
+
+void headerChat(){
+    system("clear");
+    printf("\n-------------------------------------\n");
+    printf("--------------------------------------\n");
+    printf("  Bem vindo! Diga ola 0/\n\n");
 }

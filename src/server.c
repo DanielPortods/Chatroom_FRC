@@ -14,7 +14,7 @@
 
 int PORT = 5200, CAPACITY, TRUE = 1, SD_S, ADDRLEN, FDMAX;
 char IP_ADR[16] = "127.0.0.", NAME[22], NICKOWNER[15], BUF[256];
-fd_set MASTER, READ_FDS, WRITE_FDS;
+fd_set MASTER, READ_FDS;
 struct sockaddr_in 	MYADDR, REMOTEADDR;
 
 typedef struct participant{
@@ -48,6 +48,7 @@ int serverComand(){
     if(c == 'q') return 1;
     else if(c == 'e') return 2;
     else if(c == 'l') return 3;
+    else if(c == '#') return 4;
 
 return 0;
 }
@@ -115,7 +116,6 @@ void launchRoom(){
 
     listen(SD_S, 10); 
     FD_SET(SD_S, &MASTER);
-    //FD_SET(STDIN, &MASTER);
     FDMAX = SD_S;
     
     participant *parts = malloc(CAPACITY*sizeof(participant));
@@ -141,8 +141,8 @@ void launchRoom(){
 
                         CAPACITY--;
                         refreshVacations(IP_ADR, CAPACITY);
-                        //send a wellcome msg
-                        //broadcast the new member
+                        //to do send a wellcome msg
+                        //to do broadcast the new member
                     }
                     else continue;                    
 	            } 
@@ -173,7 +173,11 @@ void launchRoom(){
                         else if(comand == 3){
                             listParts(tam, parts);
                             send(i, BUF, sizeof(BUF), 0);
-                        } 
+                        }
+                        else if(comand == 4){
+                            continue;
+                            //to do implementação de mensagens diretas
+                        }
                         else {
                             strcpy(BUF, "Comando inválido...");
                             send(i, BUF, sizeof(BUF), 0);

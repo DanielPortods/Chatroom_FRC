@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "menus.h"
 
 int SD_C;
 
@@ -25,7 +26,7 @@ void *receiveAndShowMsg(){
             pthread_exit(NULL);
         }
 
-        fprintf(stdout, "\n%s\n", res);
+        fprintf(stdout, "\n%s\n> ", res);
 		fflush(stdout);  		
 	}
 }
@@ -41,6 +42,8 @@ void startDialogProccess(int sd, char* nick){
     identtify[0] = '[';    
     strncat(identtify, nick, sz);
     strcat(identtify, "]: \0");
+
+    headerChat();
     
     pthread_t rec_th;
     pthread_create(&rec_th, NULL, receiveAndShowMsg, NULL);
@@ -52,6 +55,7 @@ void startDialogProccess(int sd, char* nick){
         strcpy(msg, identtify);
 
         fflush(stdin);
+        printf("> ");
         fscanf(stdin, " %[^\n]", bufout);
 		 
 		if (strncmp(bufout, "/q", 2) == 0){
@@ -68,6 +72,13 @@ void startDialogProccess(int sd, char* nick){
         }
         else if (strncmp(bufout, "/l", 2) == 0){
             char com[18] = "l#";
+            send(SD_C, com, strlen(com), 0);
+            continue;
+        }
+        else if (bufout[0]== '@'){           
+            char com[256] = "##";
+            strcat(msg, bufout);
+            strcat(com, msg);
             send(SD_C, com, strlen(com), 0);
             continue;
         }

@@ -1,1 +1,1 @@
-int createRoom();
+int createRoom(char* nick, char* ladoServ);
