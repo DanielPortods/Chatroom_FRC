@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-int SD_C, S=1;
+int SD_C;
 
 void *receiveAndShowMsg(){
     while (1){        
@@ -22,7 +22,6 @@ void *receiveAndShowMsg(){
         if(res[0] == 'e'){
             printf("\nUtilize o comando /q para continuar!\n");
             printf("------------------------------------\n");
-            S=0;
             pthread_exit(NULL);
         }
 
@@ -34,6 +33,8 @@ void *receiveAndShowMsg(){
 void startDialogProccess(int sd, char* nick){
     SD_C = sd;
 
+    send(sd, nick, sizeof(nick), 0);
+
     int sz = strlen(nick);
     char *identtify = calloc(sz+5, sizeof(char));
 
@@ -44,7 +45,7 @@ void startDialogProccess(int sd, char* nick){
     pthread_t rec_th;
     pthread_create(&rec_th, NULL, receiveAndShowMsg, NULL);
 
-    while (S){   
+    while (1){   
         char msg[276], bufout[256];
         memset(&msg, 0x0, sizeof(msg));
 
@@ -65,19 +66,22 @@ void startDialogProccess(int sd, char* nick){
             send(SD_C, com, strlen(com), 0);
             continue;
         }
+        else if (strncmp(bufout, "/l", 2) == 0){
+            char com[18] = "l#";
+            send(SD_C, com, strlen(com), 0);
+            continue;
+        }
 
         strcat(msg, bufout);
         send(SD_C, &msg, strlen(msg), 0);
 	} 
 
-    if(S){
         pthread_cancel(rec_th);
         pthread_join(rec_th, NULL);
         printf("------- Chat encerrado! -----\n");
-    }else S=1;
 }
 
-int connectServer(char* addr, int sd){
+int connectServer(char* addr, int sd, char* nick){
 
     struct sockaddr_in room;
 	room.sin_family = AF_INET;
@@ -90,6 +94,5 @@ int connectServer(char* addr, int sd){
         sleep(2);
 	    return 1;
     }
-
 return 0;
 }

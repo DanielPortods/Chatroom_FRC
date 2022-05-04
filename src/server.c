@@ -17,11 +17,37 @@ char IP_ADR[16] = "127.0.0.", NAME[22], NICKOWNER[15], BUF[256];
 fd_set MASTER, READ_FDS, WRITE_FDS;
 struct sockaddr_in 	MYADDR, REMOTEADDR;
 
+typedef struct participant{
+    char name[15];
+    int fd;
+}participant;
+
+void insertVet(int tam, int i, participant *part){
+
+    for (int j=0; j<tam; j++){
+        if (part[j].fd == -1){
+            strcpy(part[j].name, BUF);
+            part[j].fd = i;
+            break;
+        }
+    }
+}
+
+void removeVet(int tam, int i, participant *part){
+    for (int j=0; j<tam; j++){
+        if (part[j].fd == i){
+            strcpy(part[j].name, "\0");
+            part[j].fd = -1;
+        }
+    }
+}
+
 int serverComand(){
     char c = BUF[0];
 
     if(c == 'q') return 1;
     else if(c == 'e') return 2;
+    else if(c == 'l') return 3;
 
 return 0;
 }
@@ -35,17 +61,27 @@ void send_msg(int arg, int n) {
 }
 
 void closeServer(){
+    memset (&BUF, 0 , sizeof (BUF));
     strcpy(BUF, "[SERVER]: A sala está sendo fechada, até a proxima! bye...\n");
     send_msg(SD_S, sizeof(BUF));
     sleep(2);
 
     memset(BUF, 0, sizeof(BUF));
     BUF[0] = 'e';
-    send_msg(SD_S, 1);
-    //FD_ZERO(&MASTER);
-    //close(SD_S);  
+    send_msg(SD_S, 1);  
     deactiveRoom(IP_ADR);
     exit(0);
+}
+
+void listParts(int tam, participant *parts){
+    memset (&BUF, 0 , sizeof (BUF));
+    strcpy(BUF, "[SERVER]: lista de participantes");
+    for(int i=0; i<tam; i++){
+        if(parts[i].fd != -1) {
+            strcat(BUF, "\n     @");
+            strcat(BUF, parts[i].name);
+        }
+    }
 }
 
 void launchRoom(){
@@ -82,6 +118,10 @@ void launchRoom(){
     //FD_SET(STDIN, &MASTER);
     FDMAX = SD_S;
     
+    participant *parts = malloc(CAPACITY*sizeof(participant));
+    int tam = CAPACITY;
+    for (int i =0; i<tam; i++) parts[i].fd = -1;
+
     while (1){
        READ_FDS = MASTER;
        
@@ -94,6 +134,10 @@ void launchRoom(){
                         int newfd = accept(SD_S, (struct sockaddr *)&REMOTEADDR, (socklen_t*)&ADDRLEN);
 	                    FD_SET(newfd, &MASTER);
 	                    if (newfd > FDMAX) FDMAX = newfd;
+
+                        memset (&BUF, 0 , sizeof(BUF));
+                        recv(newfd, BUF, sizeof(BUF), 0);
+                        insertVet(tam, newfd, parts);
 
                         CAPACITY--;
                         refreshVacations(IP_ADR, CAPACITY);
@@ -109,8 +153,9 @@ void launchRoom(){
                     if(BUF[1]=='#'){
                         int comand = serverComand();
                         if (comand == 1) {
+                            removeVet(tam, i, parts);
                             FD_CLR(i, &MASTER);
-                            CAPACITY++;
+                            CAPACITY++;                            
                             refreshVacations(IP_ADR, CAPACITY);
                             continue;
                         }
@@ -124,6 +169,10 @@ void launchRoom(){
                                 strcpy(BUF, "[SERVER]: Permissão negada!\0");
                                 send(i, BUF, sizeof(BUF), 0);
                             } 
+                        }
+                        else if(comand == 3){
+                            listParts(tam, parts);
+                            send(i, BUF, sizeof(BUF), 0);
                         } 
                         else {
                             strcpy(BUF, "Comando inválido...");

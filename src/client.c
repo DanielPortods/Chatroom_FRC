@@ -30,8 +30,7 @@ int main(){
     
     wellcome();
 
-    NICK = identify();
-    
+    NICK = identify();    
 
     while (1)
     {
@@ -51,7 +50,7 @@ int main(){
 
             enableSocket();
 
-			if(connectServer(addr_s, SD)) {
+			if(connectServer(addr_s, SD, NICK)) {
                 close(SD);
                 continue;
             }
@@ -74,7 +73,7 @@ int main(){
 
             enableSocket();
 
-            if(connectServer(addr_room, SD)){
+            if(connectServer(addr_room, SD, NICK)){
                 close(SD);
                 continue;
             }
