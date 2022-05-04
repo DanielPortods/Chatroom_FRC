@@ -90,12 +90,17 @@ void launchRoom(){
        for (int i = 0; i <= FDMAX; i++) {
 	        if (FD_ISSET(i, &READ_FDS)) {
 	            if (i == SD_S) {
-	                int newfd = accept(SD_S, (struct sockaddr *)&REMOTEADDR, (socklen_t*)&ADDRLEN);
-	                FD_SET(newfd, &MASTER);
-	                if (newfd > FDMAX) FDMAX = newfd;
-                    //refresh rooms file with new participants number
-                    //send a wellcome msg
-                    //broadcast the new member
+                    if(CAPACITY){
+                        int newfd = accept(SD_S, (struct sockaddr *)&REMOTEADDR, (socklen_t*)&ADDRLEN);
+	                    FD_SET(newfd, &MASTER);
+	                    if (newfd > FDMAX) FDMAX = newfd;
+
+                        CAPACITY--;
+                        refreshVacations(IP_ADR, CAPACITY);
+                        //send a wellcome msg
+                        //broadcast the new member
+                    }
+                    else continue;                    
 	            } 
                 else {
 		        	memset (&BUF, 0 , sizeof (BUF));
@@ -105,10 +110,20 @@ void launchRoom(){
                         int comand = serverComand();
                         if (comand == 1) {
                             FD_CLR(i, &MASTER);
+                            CAPACITY++;
+                            refreshVacations(IP_ADR, CAPACITY);
                             continue;
                         }
                         else if(comand == 2){
-                            closeServer();
+                            char nick[15];
+                            strcpy(nick, BUF+2);
+
+                            if(strcmp(nick, NICKOWNER) == 0) closeServer();
+                            else{
+                                memset(BUF, 0, sizeof(BUF));
+                                strcpy(BUF, "[SERVER]: Permissão negada!\0");
+                                send(i, BUF, sizeof(BUF), 0);
+                            } 
                         } 
                         else {
                             strcpy(BUF, "Comando inválido...");

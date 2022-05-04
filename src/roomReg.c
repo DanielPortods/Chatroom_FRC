@@ -156,3 +156,40 @@ int deactiveRoom(char *ipRoom){
 
 return ret;
 }
+
+int getVacations(char *addr){
+    roomData *bufferRD = malloc(SZ);
+    FILE *arq = fopen("files/rooms", "rb");
+
+    while (fread(bufferRD, SZ, 1, arq) != 0){
+        if(strcmp(bufferRD->ip, addr) == 0){
+            break;
+        }        
+    }
+
+    int ret = bufferRD->capacity;
+
+    free(bufferRD);
+    fclose(arq);
+
+return ret;
+}
+
+void refreshVacations(char* addr, int number){
+    roomData *bufferRD = malloc(SZ);
+    FILE *arq = fopen("files/rooms", "ab+");
+
+    int count = 1;
+
+    while (fread(bufferRD, SZ, 1, arq) != 0){
+        if(strcmp(bufferRD->ip, addr) == 0){
+            bufferRD->capacity = number;
+            break;
+        }     
+        count++;   
+    }
+
+    insertArq(arq, count, bufferRD);
+    free(bufferRD);
+    fclose(arq);
+}

@@ -60,10 +60,10 @@ void startDialogProccess(int sd, char* nick){
             break;
         }
         else if (strncmp(bufout, "/e", 2) == 0){
-            char com[2] = "e#";
+            char com[18] = "e#";
+            strcat(com, nick);
             send(SD_C, com, strlen(com), 0);
-            printf("------- Excluindo o servidor -----\n");
-            break;
+            continue;
         }
 
         strcat(msg, bufout);

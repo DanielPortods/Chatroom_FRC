@@ -42,6 +42,13 @@ int main(){
             
             if(createRoom(NICK, &addr_s)) continue;
 
+            if(!getVacations(addr_s)){
+                printf("\n------------------------------------\n");
+                printf("\n         Não há vagas! :(\n");
+                sleep(2);
+                continue;
+            }
+
             enableSocket();
 
 			if(connectServer(addr_s, SD)) {
@@ -57,6 +64,13 @@ int main(){
             char *addr_room = listAndSelectRooms();
 
             if (!strcmp(addr_room, "0")) continue;
+
+            if(!getVacations(addr_room)){
+                printf("\n------------------------------------\n");
+                printf("\n         Não há vagas! :(\n");
+                sleep(2);
+                continue;
+            }
 
             enableSocket();
 
